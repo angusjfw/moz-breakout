@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   var canvas = document.getElementById("myCanvas");
   var ctx = canvas.getContext("2d");
 
+  var score = 0;
   var playing = false;
   var animator;
 
@@ -23,19 +24,21 @@ document.addEventListener("DOMContentLoaded", function(event) {
   var brickWidth = 75;
   var brickHeight = 20;
   var brickPadding = 10;
-  var brickOffsetTop = 15;
+  var brickOffsetTop = 25;
   var brickOffsetLeft = 30;
 
   var rightPressed = false;
   var leftPressed = false;
   document.addEventListener("keydown", keyDownHandler, false);
   document.addEventListener("keyup", keyUpHandler, false);
+  document.addEventListener("mousemove", mouseMoveHandler, false);
  
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBall();
     drawPaddle();
     drawBricks();
+    drawScore();
     checkInput();
     checkCollisions();
     moveBall();
@@ -137,6 +140,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             dYball = -dYball;
             b.status = 0;
             ballColor = getRandomColor();
+            score++;
           }
         }
       }
@@ -152,9 +156,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
   }
 
-  function checkGameOver(cb) {
+  function checkGameOver() {
     if (ballYPosition + dYball > canvas.height - ballRadius) {
       console.log("Game Over!");
+      playing = "false";
+      clearInterval(animator);
+      document.location.reload();
+    }
+  }
+
+  function checkWin() {
+    if(score == brickRowCount*brickColumnCount) {
+      console.log("YOU WIN, CONGRATULATIONS!");
       playing = "false";
       clearInterval(animator);
       document.location.reload();
@@ -194,6 +207,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
     else if (e.keyCode == 37) {
       leftPressed = false;
+    }
+  }
+
+  function mouseMoveHandler(e) {
+    var relativeX = e.clientX - canvas.offsetLeft;
+    if(relativeX > 0 && relativeX < canvas.width) {
+      paddleX = relativeX - paddleWidth/2;
     }
   }
 
