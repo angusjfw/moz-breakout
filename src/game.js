@@ -4,13 +4,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
   var score = 0;
   var lives = 3;
-  var playing = false;
   var animator;
+  var playing;
 
   var ballRadius = 10;
-  var ballXPosition = canvas.width/2;
-  var ballYPosition = canvas.height-30;
-  var ballColor = "green";
+  var ballX = canvas.width/2;
+  var ballY = canvas.height-30;
+  var ballColor = "black";
   var dXball = 1;
   var dYball = -1;
   var speedLimit = 3.5;
@@ -28,8 +28,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
   var brickPadding = 10;
   var brickOffsetTop = 25;
   var brickOffsetLeft = 30;
-  var brickColours = ["red", "green", "blue"];
+  var brickColours = ["#1aff1a", "#80ff80", "#e5ffe5"];
 
+  var START_KEY = 32;
   var rightPressed = false;
   var leftPressed = false;
   document.addEventListener("keydown", keyDownHandler, false);
@@ -68,8 +69,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
 
   function resetBall() {
-    ballXPosition = canvas.width/2;
-    ballYPosition = canvas.height-30;
+    ballX = canvas.width/2;
+    ballY = canvas.height-30;
     dXball = 2;
     dYball = -2;
   }
@@ -100,6 +101,22 @@ document.addEventListener("DOMContentLoaded", function(event) {
     ctx.fillText("Score: "+score, 8, 20);
   }
 
+  function drawBall() {
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, ballRadius, 0, Math.PI*2);
+    ctx.fillStyle = ballColor;
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  function drawPaddle() {
+    ctx.beginPath();
+    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.closePath();
+  }
+  
   function drawBricks() {
     for(c=0; c<brickColumnCount; c++) {
       for(r=0; r<brickRowCount; r++) {
@@ -119,8 +136,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
 
   function moveBall() {
-    ballXPosition += dXball;
-    ballYPosition += dYball;
+    ballX += dXball;
+    ballY += dYball;
   }
 
   function checkCollisions() {
@@ -131,24 +148,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
 
   function checkTopAndSideCollisions() {
-    if (ballXPosition + dXball > canvas.width-ballRadius  || ballXPosition + dXball < ballRadius) {
+    if (ballX + dXball > canvas.width-ballRadius  || ballX + dXball < ballRadius) {
       dXball = -dXball;
     }
 
-    if (ballYPosition  + dYball < ballRadius) {
+    if (ballY  + dYball < ballRadius) {
       dYball = -dYball;
     }
   }
-
-  function checkPaddleCollisions() {
-    if (ballYPosition + dYball > (canvas.height-ballRadius) - paddleHeight) {
-      if(ballXPosition + ballRadius > paddleX && ballXPosition - ballRadius < paddleX + paddleWidth) {
-        dYball = -dYball;
-        increaseSpeed();
-      }
-    }
-  }
-
+  
   function increaseSpeed() {
     if (Math.abs(dYball) < speedLimit || Math.abs(dXball) < speedLimit) {
       dYball = dYball * 1.05;
@@ -156,12 +164,30 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
   }
 
+  function checkPaddleCollisions() {
+    if (ballY + dYball > (canvas.height-ballRadius) - paddleHeight) {
+      if(ballX + ballRadius > paddleX && ballX - ballRadius < paddleX + paddleWidth) {
+        dYball = -dYball;
+        increaseSpeed();
+      }
+    }
+  }
+
+  function getRandomColor() {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
+
   function checkBrickCollisions() {
     for(c=0; c<brickColumnCount; c++) {
       for(r=0; r<brickRowCount; r++) {
         var b = bricks[c][r];
         if(b.status > 0) {
-          if(ballXPosition > b.x && ballXPosition < b.x+brickWidth && ballYPosition > b.y && ballYPosition < b.y+brickHeight) {
+          if(ballX > b.x && ballX < b.x+brickWidth && ballY > b.y && ballY < b.y+brickHeight) {
             dYball = -dYball;
             b.status--;
             ballColor = getRandomColor();
@@ -174,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
 
   function checkInput() {
-    if(rightPressed && paddleX < canvas.width-paddleWidth) {
+    if(rightPressed && paddleX < canvas.width - paddleWidth) {
           paddleX += paddleSpeed;
     }
     else if(leftPressed && paddleX > 0) {
@@ -183,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
 
   function checkGameOver() {
-    if (ballYPosition + dYball > canvas.height - ballRadius) {
+    if (ballY + dYball > canvas.height - ballRadius) {
       lives--;
       if (playing && !lives) {
         console.log("Game Over!");
@@ -206,24 +232,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
   }
 
-  function drawBall() {
-    ctx.beginPath();
-    ctx.arc(ballXPosition, ballYPosition, ballRadius, 0, Math.PI*2);
-    ctx.fillStyle = ballColor;
-    ctx.fill();
-    ctx.closePath();
-  }
-
-  function drawPaddle() {
-    ctx.beginPath();
-    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
-    ctx.fillStyle = "#0095DD";
-    ctx.fill();
-    ctx.closePath();
-  }
-
   function keyDownHandler(e) {
-    if (e.keyCode == 32) {
+    if (e.keyCode == START_KEY) {
       start();
     } else if (e.keyCode == 39) {
       rightPressed = true;
@@ -248,14 +258,4 @@ document.addEventListener("DOMContentLoaded", function(event) {
       paddleX = relativeX - paddleWidth/2;
     }
   }
-
-  function getRandomColor() {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (var i = 0; i < 6; i++ ) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
-
 });
