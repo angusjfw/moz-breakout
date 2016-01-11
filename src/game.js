@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
   var score = 0;
   var lives = 3;
-  var animator;
   var playing;
 
   var ballRadius = 10;
@@ -13,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   var ballColor = "black";
   var dXball = 1;
   var dYball = -1;
-  var speedLimit = 3.5;
+  var speedIncrease = 0.5;
 
   var paddleHeight = 2;
   var paddleWidth = 75;
@@ -21,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   var paddleSpeed = 7;
 
   var bricks;
+  var brickLives = 3;
   var brickRowCount = 3;
   var brickColumnCount = 5;
   var brickWidth = 75;
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     for(c=0; c<brickColumnCount; c++) {
       bricks[c] = [];
       for(r=0; r<brickRowCount; r++) {
-        bricks[c][r] = { x: 0, y: 0, status: 3 };
+        bricks[c][r] = { x: 0, y: 0, status: brickLives };
       }
     }
   }
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
           bricks[c][r].y = brickY;
           ctx.beginPath();
           ctx.rect(brickX, brickY, brickWidth, brickHeight);
-          ctx.fillStyle = brickColours[3 - bricks[c][r].status];
+          ctx.fillStyle = brickColours[brickLives - bricks[c][r].status];
           ctx.fill();
           ctx.closePath();
         }
@@ -158,10 +158,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
   
   function increaseSpeed() {
-    if (Math.abs(dYball) < speedLimit || Math.abs(dXball) < speedLimit) {
-      dYball = dYball * 1.05;
-      dXball = dXball * 1.05;
-    }
+    dYball += (dYball > 0) ? speedIncrease : -speedIncrease;
+    dXball += (dXball > 0) ? speedIncrease : -speedIncrease;
   }
 
   function checkPaddleCollisions() {
@@ -224,7 +222,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
 
   function checkWin() {
-    if(score == 3*brickRowCount*brickColumnCount) {
+    if(score == brickLives * brickRowCount*brickColumnCount) {
       console.log("YOU WIN, CONGRATULATIONS!");
       window.cancelAnimationFrame(playing);
       playing = undefined;
