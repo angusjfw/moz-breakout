@@ -12,8 +12,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
   var ballColor = "green";
   var dXball = 1;
   var dYball = -1;
+  var speedLimit = 3;
 
-  var paddleHeight = 10;
+  var paddleHeight = 2;
   var paddleWidth = 75;
   var paddleX = (canvas.width-paddleWidth)/2;
   var paddleSpeed = 7;
@@ -26,6 +27,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   var brickPadding = 10;
   var brickOffsetTop = 25;
   var brickOffsetLeft = 30;
+  var brickColours = ["red", "green", "blue"];
 
   var rightPressed = false;
   var leftPressed = false;
@@ -55,8 +57,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
   function resetBall() {
     ballXPosition = canvas.width/2;
     ballYPosition = canvas.height-30;
-    dXball = 1;
-    dYball = -1;
+    dXball = 1.5;
+    dYball = -1.5;
   }
 
   function resetBricks() {
@@ -64,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     for(c=0; c<brickColumnCount; c++) {
       bricks[c] = [];
       for(r=0; r<brickRowCount; r++) {
-        bricks[c][r] = { x: 0, y: 0, status: 1 };
+        bricks[c][r] = { x: 0, y: 0, status: 3 };
       }
     }
   }
@@ -78,14 +80,14 @@ document.addEventListener("DOMContentLoaded", function(event) {
   function drawBricks() {
     for(c=0; c<brickColumnCount; c++) {
       for(r=0; r<brickRowCount; r++) {
-        if(bricks[c][r].status == 1) {
+        if(bricks[c][r].status > 0) {
           var brickX = (c*(brickWidth+brickPadding))+brickOffsetLeft;
           var brickY = (r*(brickHeight+brickPadding))+brickOffsetTop;
           bricks[c][r].x = brickX;
           bricks[c][r].y = brickY;
           ctx.beginPath();
           ctx.rect(brickX, brickY, brickWidth, brickHeight);
-          ctx.fillStyle = "#0095DD";
+          ctx.fillStyle = brickColours[3 - bricks[c][r].status];
           ctx.fill();
           ctx.closePath();
         }
@@ -125,9 +127,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
 
   function increaseSpeed() {
-    if (dYball < 4 || dXball < 4) {
-      dYball = dYball * 1.1;
-      dXball = dXball * 1.1;
+    if (Math.abs(dYball) < speedLimit || Math.abs(dXball) < speedLimit) {
+      dYball = dYball * 1.05;
+      dXball = dXball * 1.05;
     }
   }
 
@@ -135,12 +137,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
     for(c=0; c<brickColumnCount; c++) {
       for(r=0; r<brickRowCount; r++) {
         var b = bricks[c][r];
-        if(b.status == 1) {
+        if(b.status > 0) {
           if(ballXPosition > b.x && ballXPosition < b.x+brickWidth && ballYPosition > b.y && ballYPosition < b.y+brickHeight) {
             dYball = -dYball;
-            b.status = 0;
+            b.status--;
             ballColor = getRandomColor();
             score++;
+            checkWin();
           }
         }
       }
@@ -166,7 +169,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
 
   function checkWin() {
-    if(score == brickRowCount*brickColumnCount) {
+    if(score == 3*brickRowCount*brickColumnCount) {
       console.log("YOU WIN, CONGRATULATIONS!");
       playing = "false";
       clearInterval(animator);
