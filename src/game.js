@@ -6,14 +6,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
   var lives = 3;
   var playing;
 
-  var ballRadius = 10;
-  var ballX = canvas.width/2;
-  var ballY = canvas.height-30;
-  var ballColor = "black";
-  var dXball = 1;
-  var dYball = -1;
-  var speedIncrease = 0.5;
-
+  var ball = new Ball(10, canvas.width/2, canvas.height-30);
+  
   var paddleHeight = 2;
   var paddleWidth = 75;
   var paddleX = (canvas.width-paddleWidth)/2;
@@ -37,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   document.addEventListener("keyup", keyUpHandler, false);
   document.addEventListener("mousemove", mouseMoveHandler, false);
 
-  resetBall();
+  ball.reset();
   resetBricks();
   draw();
 
@@ -47,12 +41,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
     draw();
     checkInput();
     checkCollisions();
-    moveBall();
+    ball.move();
     playing = window.requestAnimationFrame(animate);
   }
   
   function draw() {
-    drawBall();
+    drawCircle(ball);
     drawPaddle();
     drawBricks();
     drawScore();
@@ -62,17 +56,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
   function start() {
     if (!playing) {
       console.log("GO!");
-      resetBall();   
+      ball.reset();   
       resetBricks();
       animate();
     }
-  }
-
-  function resetBall() {
-    ballX = canvas.width/2;
-    ballY = canvas.height-30;
-    dXball = 2;
-    dYball = -2;
   }
 
   function resetBricks() {
@@ -101,10 +88,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
     ctx.fillText("Score: "+score, 8, 20);
   }
 
-  function drawBall() {
+  function drawCircle(obj) {
     ctx.beginPath();
-    ctx.arc(ballX, ballY, ballRadius, 0, Math.PI*2);
-    ctx.fillStyle = ballColor;
+    ctx.arc(obj.xPos, obj.yPos, obj.radius, 0, Math.PI*2);
+    ctx.fillStyle = obj.colour;
     ctx.fill();
     ctx.closePath();
   }
@@ -135,11 +122,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
   }
 
-  function moveBall() {
-    ballX += dXball;
-    ballY += dYball;
-  }
-
   function checkCollisions() {
     checkTopAndSideCollisions();  
     checkBrickCollisions();
@@ -148,36 +130,22 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
 
   function checkTopAndSideCollisions() {
-    if (ballX + dXball > canvas.width-ballRadius  || ballX + dXball < ballRadius) {
-      dXball = -dXball;
+    if (ball.xPos + ball.dx > canvas.width-ball.radius  || ball.xPos + ball.dx < ball.radius) {
+      ball.dx = -ball.dx;
     }
 
-    if (ballY  + dYball < ballRadius) {
-      dYball = -dYball;
+    if (ball.yPos  + ball.dy < ball.radius) {
+      ball.dy = -ball.dy;
     }
   }
   
-  function increaseSpeed() {
-    dYball += (dYball > 0) ? speedIncrease : -speedIncrease;
-    dXball += (dXball > 0) ? speedIncrease : -speedIncrease;
-  }
-
   function checkPaddleCollisions() {
-    if (ballY + dYball > (canvas.height-ballRadius) - paddleHeight) {
-      if(ballX + ballRadius > paddleX && ballX - ballRadius < paddleX + paddleWidth) {
-        dYball = -dYball;
-        increaseSpeed();
+    if (ball.yPos + ball.dy > (canvas.height-ball.radius) - paddleHeight) {
+      if(ball.xPos + ball.radius > paddleX && ball.xPos - ball.radius < paddleX + paddleWidth) {
+        ball.dy = -ball.dy;
+        ball.increaseSpeed();
       }
     }
-  }
-
-  function getRandomColor() {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (var i = 0; i < 6; i++ ) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
   }
 
   function checkBrickCollisions() {
@@ -185,10 +153,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
       for(r=0; r<brickRowCount; r++) {
         var b = bricks[c][r];
         if(b.status > 0) {
-          if(ballX > b.x && ballX < b.x+brickWidth && ballY > b.y && ballY < b.y+brickHeight) {
-            dYball = -dYball;
+          if(ball.xPos > b.x && ball.xPos < b.x+brickWidth && ball.yPos > b.y && ball.yPos < b.y+brickHeight) {
+            ball.dy = -ball.dy;
             b.status--;
-            ballColor = getRandomColor();
+            ball.newRandomColour();
             score++;
             checkWin();
           }
@@ -207,7 +175,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
   }
 
   function checkGameOver() {
-    if (ballY + dYball > canvas.height - ballRadius) {
+    if (ball.yPos + ball.dy > canvas.height - ball.radius) {
       lives--;
       if (playing && !lives) {
         console.log("Game Over!");
@@ -215,7 +183,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         playing = undefined;
         document.location.reload();
       } else {
-        resetBall();
+        ball.reset();
         resetPaddle();
       }
     }
